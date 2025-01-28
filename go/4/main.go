@@ -1,63 +1,83 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
-	bisectfind := func(inarr []int, fval int) int {
+	bisectfind := func(inarr []int, fval int) (int, bool) {
 		var rval int
-		var cend int = len(inarr)
-		var cmid int = cend / 2
-		fmt.Printf("%d, %d\n", inarr[cmid], fval)
-		if inarr[cmid] > fval {
-			fmt.Printf("middle is > input value. Bisecting to right\n")
-
-		} else if inarr[cmid] < fval {
-			fmt.Printf("middle is < input value. Bisecting to left.\n")
-			if inarr[cmid+1] >= fval {
-				fmt.Printf("Found entry point. %d\n", cmid)
+		var rfound bool
+		var high int = len(inarr) - 1
+		var mid int
+		low := 0
+		for low <= high {
+			mid = (low + high) / 2
+			if inarr[mid] == fval {
+				rfound = true
+				rval = mid
+				break
 			}
-		} else if inarr[cmid] == fval {
-			fmt.Printf("Middle == input value")
+			if inarr[mid] > fval {
+				high = mid - 1
+			} else {
+				low = mid + 1
+			}
 		}
-		return rval
+		if !rfound {
+			if inarr[mid] < fval {
+				rval = len(inarr)
+			} else {
+				rval = mid
+			}
+		}
+		return rval, rfound
 	}
+
 	var rval float64
 	var l1 int = len(nums1)
 	var l2 int = len(nums2)
 	var midval = (l1 + l2) / 2
 	var midcombined [2]int
+	var cfidx int
 	if (l1+l2)%2 == 0 {
-		fmt.Printf("Even number of elements. %d\n", l1+l2)
 		midcombined[0] = midval
 		midcombined[1] = midval + 1
 	} else {
-		fmt.Printf("Odd number of elements %d\n", l1+l2)
 		midcombined[0] = midval
 		midcombined[1] = midval
 	}
+	hldArr := nums1
 
-	//var inds int
-	fmt.Printf("mid combined is %d\n", midcombined)
-	fmt.Printf("%v, %v, %d, %d\n", nums1, nums2, l1, l2)
-	if l1 > l2 {
-		if nums1[l1-1] > nums2[0] {
-			fmt.Printf("End of array 1 is > beginning of array 2\n")
+	//fmt.Printf("mid combined is %d\n", midcombined)
+	//fmt.Printf("%v, %v, %d, %d\n", nums1, nums2, l1, l2)
+	for (len(hldArr)-1 < midcombined[1]) && (cfidx < len(nums2)) {
+		fmt.Printf("%v\n", hldArr)
+		iloc, fnd := bisectfind(hldArr, nums2[cfidx])
+		if iloc == len(hldArr) {
+			hldArr = append(hldArr, nums2[cfidx])
 		} else {
-			fmt.Printf("End of array 1 is <= beginning of array 2")
+			hldArr = slices.Insert(hldArr, iloc, nums2[cfidx])
 		}
-		bisectfind(nums1, nums2[0])
+		fmt.Printf("%d, %t\n", iloc, fnd)
+		cfidx += 1
+	}
+	fmt.Printf("%v\n", hldArr)
+	fmt.Printf("Midpoint values are %d, %d\n", hldArr[midcombined[0]], hldArr[midcombined[1]])
+	if midcombined[1] > len(hldArr)-1 {
+		rval = float64(hldArr[midcombined[0]])
 	} else {
-		fmt.Printf("End of array 1 is <= beginning of array 2")
-
+		rval = float64(hldArr[midcombined[0]]+hldArr[midcombined[1]]) / 2.0
 	}
 	return rval
 }
 
 func main() {
 	//                 4,6,7
-	var l1 = []int{1, 3, 5, 5, 5, 7} //7
+	var l1 = []int{0} //7
 	//           5,8
-	var l2 = []int{5, 6, 7, 11} //4
+	var l2 = []int{0} //4
 	//5[4]
 	//5,5[5]
 	//5,5,5[6]
