@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 /**
  * Definition for singly-linked list.
@@ -35,7 +38,6 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 		}
 		hPtr = crPtr
 		tval := carry
-		fmt.Printf("Carry is %d, cn1 is %v, cn2 is %v\n", carry, cn1, cn2)
 		if cn1 != nil {
 			tval += cn1.Val
 		}
@@ -58,6 +60,59 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 		}
 
 	}
+	return rVal
+}
+
+func testBinaryAdd(ln1 *ListNode, ln2 *ListNode) []int {
+	lookup := []int64{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}
+	var myVal1 int64 //Can handle up to 128 nybbles
+	var myVal2 int64
+	var rVal []int
+	var nshft int
+	cptr1 := ln1
+	cptr2 := ln2
+	for {
+		myVal1 = myVal1 << 4
+		myVal2 = myVal2 << 4
+		nshft++
+		//fmt.Printf("%s\n", strconv.FormatInt(myVal1, 2))
+		//fmt.Printf("%s\n", strconv.FormatInt(myVal2, 2))
+		if cptr1 != nil {
+			myVal1 |= int64(cptr1.Val)
+			cptr1 = cptr1.Next
+		}
+		if cptr2 != nil {
+			myVal2 |= int64(cptr2.Val)
+			cptr2 = cptr2.Next
+		}
+		if (cptr1 == nil) && (cptr2 == nil) {
+			break
+		}
+	}
+	smask := int64(0x0F) << ((nshft) * 4)
+	fmt.Printf("%s\n", strconv.FormatInt(myVal1, 2))
+	fmt.Printf("%s\n", strconv.FormatInt(myVal2, 2))
+	cryflg := false
+	for i := 0; i < nshft+1; i++ {
+		v1 := (myVal1 & smask) >> ((nshft - i) * 4)
+		v2 := (myVal2 & smask) >> ((nshft - i) * 4)
+		tidx := v1 + v2
+		if cryflg {
+			tidx += 1
+		}
+		tsum := lookup[tidx]
+		cryflg = tidx > 9
+		fmt.Printf("%d\n", i)
+		//fmt.Printf("%s\n", strconv.FormatInt(smask, 2))
+		fmt.Printf("%s\n", strconv.FormatInt(v1, 2))
+		fmt.Printf("%s\n", strconv.FormatInt(v2, 2))
+		fmt.Printf("%s\n", strconv.FormatInt(tsum, 10))
+		smask = smask >> 4
+	}
+	if cryflg {
+		fmt.Printf("Extra carry\n")
+	}
+	fmt.Printf("\n%v\n%v\n", myVal1, myVal2)
 	return rVal
 }
 
@@ -88,9 +143,10 @@ func main() {
 	}
 
 	l1 := genList([]int{9, 9, 9, 9, 9, 9, 9})
+	l2 := genList([]int{9, 8, 7, 6})
 	printem(l1)
-	l2 := genList([]int{9, 9, 9, 9})
 	printem(l2)
+	testBinaryAdd(l1, l2)
 
 	fmt.Printf("%v\n", printem(addTwoNumbers(l1, l2)))
 
